@@ -1,0 +1,4 @@
+name: NextLib
+version: '${version}'
+main: io.github.chi2l3s.nextlib.NextLib
+api-version: '1.16'
