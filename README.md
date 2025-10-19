@@ -1,6 +1,14 @@
 # NextLib
 
 [![](https://jitpack.io/v/chi2l3s/next-lib.svg)](https://jitpack.io/#chi2l3s/next-lib)
+[![CodeFactor](https://www.codefactor.io/repository/github/chi2l3s/next-lib/badge)](https://www.codefactor.io/repository/github/chi2l3s/next-lib)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Java](https://img.shields.io/badge/Java-17-blue)
+![Gradle](https://img.shields.io/badge/Gradle-8.7-green)
+[![JitPack Downloads](https://jitpack.io/v/chi2l3s/next-lib/month.svg)](https://jitpack.io/#chi2l3s/next-lib)
+![GitHub last commit](https://img.shields.io/github/last-commit/chi2l3s/next-lib)
+![GitHub issues](https://img.shields.io/github/issues/chi2l3s/next-lib)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/chi2l3s/next-lib)
 
 **NextLib** — это лёгкая библиотека для разработки Minecraft-плагинов на Paper/Spigot.
 Она упрощает работу с командами, предметами, цветами и GUI-меню, включая загрузку меню из YAML файлов.
