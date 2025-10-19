@@ -1,0 +1,236 @@
+# NextLib
+
+**NextLib** — это лёгкая библиотека для разработки Minecraft-плагинов на Paper/Spigot.
+Она упрощает работу с командами, предметами, цветами и GUI-меню, включая загрузку меню из YAML файлов.
+
+---
+
+## Установка
+
+### Gradle
+
+```gradle
+repositories {
+    mavenCentral()
+    maven { url "https://repo.papermc.io/repository/maven-public/" }
+}
+
+dependencies {
+    compileOnly "cloud.nextgentech:nextlib:1.0.0"
+}
+```
+
+### Maven
+
+```xml
+<repositories>
+    <repository>
+        <id>papermc</id>
+        <url>https://repo.papermc.io/repository/maven-public/</url>
+    </repository>
+</repositories>
+
+<dependency>
+<groupId>cloud.nextgentech</groupId>
+<artifactId>nextlib</artifactId>
+<version>1.0.0</version>
+<scope>provided</scope>
+</dependency>
+```
+
+---
+
+## Возможности
+
+* Color API — поддержка HEX и `&` цветовых кодов.
+* Command API — система сабкоманд с автодополнением.
+* Item API — быстрый билдер предметов (имя, лор, PDC, скины).
+* Config Manager — удобная работа с YAML конфигами.
+* GUI API — создание меню через YAML файлы в папке `menus/`.
+
+---
+
+## Color API
+
+```java
+import ru.amixoldev.nextlib.color.ColorUtil;
+import ru.amixoldev.nextlib.color.ColorUtilImpl;
+
+ColorUtil color = new ColorUtilImpl();
+
+player.sendMessage(color.formatMessage("&aHello &bWorld &#FF0000!"));
+```
+
+Поддерживает HEX (`&#RRGGBB`) и стандартные `&` коды.
+
+---
+
+## Command API
+
+```java
+public class ExampleCommand extends LongCommandExecutor {
+
+    public ExampleCommand() {
+        addSubCommand(new SubCommand() {
+            @Override
+            public void onExecute(CommandSender sender, String[] args) {
+                sender.sendMessage("Hello from subcommand!");
+            }
+
+            @Override
+            public List<String> onTabComplete(CommandSender sender, String[] args) {
+                return List.of("one", "two", "three");
+            }
+        }, new String[]{"test", "t"}, new Permission("example.use"));
+    }
+}
+```
+
+Регистрируй команду в `onEnable()`:
+
+```java
+getCommand("example").setExecutor(new ExampleCommand());
+```
+
+---
+
+## Item API
+
+```java
+ItemStack item = new ItemBuilder(Material.DIAMOND_SWORD)
+        .setName("&bМеч силы")
+        .setLore(List.of("&7Очень острый меч", "&e+10 к силе"))
+        .addPersistentTag("power", PersistentDataType.INTEGER, 10)
+        .build();
+```
+
+Поддержка:
+
+* имени (`setName`)
+* лора (`setLore`)
+* `PersistentDataContainer` (`addPersistentTag`)
+* скинов (`setSkullOwner`)
+
+---
+
+## Config Manager
+
+```java
+Config config = new Config(this);
+config.reloadConfig();
+
+String prefix = config.getPrefix();
+int countdown = config.getCountdown();
+```
+
+Поддержка:
+
+* Автосоздание конфига, если он отсутствует.
+* Парсинг в Java-поля.
+* Автоматическое обновление с помощью `ConfigUpdater`.
+
+---
+
+## GUI API
+
+Меню хранятся в папке `plugins/YourPlugin/menus/`.
+Каждый `.yml` файл = отдельное меню.
+
+### main.yml
+
+```yaml
+id: "main"
+title: "&0Главное меню"
+size: 54
+items:
+  close:
+    material: BARRIER
+    slot: 53
+    name: "&cЗакрыть"
+    onLeftClick:
+      - "close"
+
+  diamond:
+    material: DIAMOND
+    slot: 0
+    amount: 1
+    name: "&bНаграда"
+    lore:
+      - "Нажмите, чтобы получить"
+    onLeftClick:
+      - "console give %player% diamond 64"
+      - "message &aВы получили награду!"
+      - "opengui shop"
+```
+
+### shop.yml
+
+```yaml
+id: "shop"
+title: "&aМагазин"
+size: 27
+items:
+  back:
+    material: ARROW
+    slot: 26
+    name: "&7Назад"
+    onLeftClick:
+      - "opengui main"
+```
+
+### Использование в плагине
+
+```java
+GuiManager guiManager;
+
+@Override
+public void onEnable() {
+    guiManager = new GuiManager(this);
+
+    // Загружаем все меню из папки /menus
+    File menusFolder = new File(getDataFolder(), "menus");
+    guiManager.loadFromFolder(menusFolder);
+
+    // Команда для открытия меню
+    getCommand("menu").setExecutor((sender, cmd, label, args) -> {
+        if (sender instanceof Player player) {
+            String id = args.length > 0 ? args[0] : "main";
+            guiManager.openGui(player, id);
+        }
+        return true;
+    });
+}
+```
+
+---
+
+## Доступные действия в GUI
+
+* `close` — закрыть меню.
+* `command <cmd>` — выполнить команду от имени игрока.
+* `console <cmd>` — выполнить команду от имени консоли.
+* `message <msg>` — отправить сообщение игроку.
+* `opengui <id>` — открыть другое меню.
+
+---
+
+## Roadmap
+
+* [x] Command API
+* [x] Item API
+* [x] Color API
+* [x] Config Manager
+* [x] GUI API с конфигами
+* [ ] GUI Action Registry (кастомные действия)
+* [ ] SQL/Redis API
+* [ ] Event Utilities
+
+---
+
+## Лицензия
+
+MIT License © 2025 NextGenTech
+
+---
+
+Хочешь, я добавлю сюда раздел с примерами "Лучшие практики" (например, как лучше организовать свои меню и команды в отдельные классы)?
