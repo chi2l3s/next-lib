@@ -1,5 +1,7 @@
 # NextLib
 
+[![](https://jitpack.io/v/chi2l3s/next-lib.svg)](https://jitpack.io/#chi2l3s/next-lib)
+
 **NextLib** — это лёгкая библиотека для разработки Minecraft-плагинов на Paper/Spigot.
 Она упрощает работу с командами, предметами, цветами и GUI-меню, включая загрузку меню из YAML файлов.
 
@@ -12,11 +14,11 @@
 ```gradle
 repositories {
     mavenCentral()
-    maven { url "https://repo.papermc.io/repository/maven-public/" }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    compileOnly "cloud.nextgentech:nextlib:1.0.0"
+    implementation 'com.github.chi2l3s:next-lib:1.0.0'
 }
 ```
 
@@ -25,14 +27,14 @@ dependencies {
 ```xml
 <repositories>
     <repository>
-        <id>papermc</id>
-        <url>https://repo.papermc.io/repository/maven-public/</url>
+        <id>jitpack</id>
+        <url>https://jitpack.io/</url>
     </repository>
 </repositories>
 
 <dependency>
-<groupId>cloud.nextgentech</groupId>
-<artifactId>nextlib</artifactId>
+<groupId>com.github.chi2l3s</groupId>
+<artifactId>next-lib</artifactId>
 <version>1.0.0</version>
 <scope>provided</scope>
 </dependency>
