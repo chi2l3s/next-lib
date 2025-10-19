@@ -1,4 +1,4 @@
-package io.github.chi2l3s.nextlib.color;
+package io.github.chi2l3s.nextlib.api.color;
 
 import net.md_5.bungee.api.ChatColor;
 

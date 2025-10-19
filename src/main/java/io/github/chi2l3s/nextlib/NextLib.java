@@ -1,12 +1,17 @@
 package io.github.chi2l3s.nextlib;
 
+import io.github.chi2l3s.nextlib.api.color.ColorUtil;
+import io.github.chi2l3s.nextlib.api.color.ColorUtilImpl;
+import io.github.chi2l3s.nextlib.internal.util.UpdateChecker;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class NextLib extends JavaPlugin {
 
+    public static ColorUtil c = new ColorUtilImpl();
+
     @Override
     public void onEnable() {
-        // Plugin startup logic
+        new UpdateChecker(this, "chi2l3s/next-lib").checkForUpdates();
 
     }
 

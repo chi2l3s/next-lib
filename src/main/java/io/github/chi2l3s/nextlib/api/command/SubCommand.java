@@ -1,4 +1,4 @@
-package io.github.chi2l3s.nextlib.command;
+package io.github.chi2l3s.nextlib.api.command;
 
 import org.bukkit.command.CommandSender;
 
