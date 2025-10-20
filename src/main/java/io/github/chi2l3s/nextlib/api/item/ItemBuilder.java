@@ -35,7 +35,7 @@ public class ItemBuilder {
 
     public ItemBuilder setName(String name) {
         if (meta != null) {
-            meta.displayName(Component.text(NextLib.c.formatMessage(name)));
+            meta.setDisplayName(NextLib.c.formatMessage(name));
         }
         return this;
     }
@@ -46,10 +46,10 @@ public class ItemBuilder {
 
     public ItemBuilder setLore(List<String> lore) {
         if (meta != null) {
-            List<Component> l = lore.stream()
-                    .map(line -> Component.text(NextLib.c.formatMessage(line)))
+            List<String> l = lore.stream()
+                    .map(line -> NextLib.c.formatMessage(line))
                     .collect(Collectors.toList());
-            meta.lore(l);
+            meta.setLore(l);
         }
         return this;
     }
