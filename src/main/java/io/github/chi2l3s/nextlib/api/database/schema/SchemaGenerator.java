@@ -191,7 +191,9 @@ public final class SchemaGenerator {
         }
         sql.append(")");
         builder.addStatement("final String sql = $S", sql.toString());
-        builder.addStatement("client.execute(sql, $L)", buildStatementLambda(buildStatementBinder(table)));
+        builder.addCode("client.execute(sql, ")
+                .addCode(buildStatementLambda(buildStatementBinder(table)))
+                .addCode(");\n");
         return builder.build();
     }
 
@@ -203,9 +205,10 @@ public final class SchemaGenerator {
                 .returns(ParameterizedTypeName.get(ClassName.get(Optional.class), recordType))
                 .addParameter(idType, "id")
                 .addStatement("final String sql = $S",
-                        "SELECT * FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?")
-                .addStatement("return client.queryOne(sql, $L, resultSet -> mapRow(resultSet))",
-                        buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)));
+                        "SELECT * FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?");
+        builder.addCode("return client.queryOne(sql, ")
+                .addCode(buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)))
+                .addCode(", resultSet -> mapRow(resultSet));\n");
         return builder.build();
     }
 
@@ -235,8 +238,9 @@ public final class SchemaGenerator {
         builder.addStatement("final String sql = $S",
                 "UPDATE " + table.getTableName() + " SET " + assignments +
                         " WHERE " + columnName(idField) + " = ?");
-        builder.addStatement("client.execute(sql, $L)",
-                buildStatementLambda(buildUpdateBinder(table)));
+        builder.addCode("client.execute(sql, ")
+                .addCode(buildStatementLambda(buildUpdateBinder(table)))
+                .addCode(");\n");
         return builder.build();
     }
 
@@ -247,9 +251,10 @@ public final class SchemaGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(idType, "id")
                 .addStatement("final String sql = $S",
-                        "DELETE FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?")
-                .addStatement("client.execute(sql, $L)",
-                        buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)));
+                        "DELETE FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?");
+        builder.addCode("client.execute(sql, ")
+                .addCode(buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)))
+                .addCode(");\n");
         return builder.build();
     }
 
@@ -395,30 +400,18 @@ public final class SchemaGenerator {
     }
 
     private int sqlTypeConstant(FieldDefinition field) {
-        switch (field.getType()) {
-            case STRING:
-            case TEXT:
-            case JSON:
-                return Types.VARCHAR;
-            case INT:
-                return Types.INTEGER;
-            case LONG:
-                return Types.BIGINT;
-            case BOOLEAN:
-                return Types.BOOLEAN;
-            case DOUBLE:
-                return Types.DOUBLE;
-            case DECIMAL:
-                return Types.DECIMAL;
-            case TIMESTAMP:
-                return Types.TIMESTAMP;
-            case DATE:
-                return Types.DATE;
-            case UUID:
-                return Types.OTHER;
-            default:
-                throw new DatabaseException("Unsupported field type: " + field.getType());
-        }
+        return switch (field.getType()) {
+            case STRING, TEXT, JSON -> Types.VARCHAR;
+            case INT -> Types.INTEGER;
+            case LONG -> Types.BIGINT;
+            case BOOLEAN -> Types.BOOLEAN;
+            case DOUBLE -> Types.DOUBLE;
+            case DECIMAL -> Types.DECIMAL;
+            case TIMESTAMP -> Types.TIMESTAMP;
+            case DATE -> Types.DATE;
+            case UUID -> Types.OTHER;
+            default -> throw new DatabaseException("Unsupported field type: " + field.getType());
+        };
     }
 
     private String columnName(FieldDefinition field) {
