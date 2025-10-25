@@ -1,5 +1,6 @@
 package io.github.chi2l3s.nextlib.api.gui;
 
+import io.github.chi2l3s.nextlib.NextLib;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -30,7 +31,7 @@ public class Gui implements Listener {
     }
 
     public void open(Player player) {
-        inventory = Bukkit.createInventory(null, size, title);
+        inventory = Bukkit.createInventory(null, size, NextLib.c.formatMessage(title));
         for (GuiItem item: items.values()) {
             inventory.setItem(item.getSlot(), item.getItem());
         }
