@@ -1,0 +1,15 @@
+packageName: io.github.example.generated
+datasource: main
+tables:
+  - name: User
+    tableName: users
+    fields:
+      - name: id
+        type: UUID
+        id: true
+      - name: username
+        type: STRING
+      - name: coins
+        type: INT
+      - name: createdAt
+        type: TIMESTAMP

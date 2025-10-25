@@ -57,6 +57,7 @@ dependencies {
 * Item API — быстрый билдер предметов (имя, лор, PDC, скины).
 * Config Manager — удобная работа с YAML конфигами.
 * GUI API — создание меню через YAML файлы в папке `menus/`.
+* Database Manager — подключение к MySQL/PostgreSQL/SQLite и генератор репозиториев по YAML-схеме.
 
 ---
 
@@ -222,6 +223,127 @@ public void onEnable() {
 * `message <msg>` — отправить сообщение игроку.
 * `opengui <id>` — открыть другое меню.
 
+### Регистрация собственных действий
+
+Через `Actions.registerAction(name, factory)` можно добавить новое действие из любого другого плагина.
+
+```java
+import io.github.chi2l3s.nextlib.api.gui.Actions;
+import io.github.chi2l3s.nextlib.api.gui.GuiManager;
+import io.github.chi2l3s.nextlib.api.gui.GuiAction;
+import org.bukkit.Location;
+
+@Override
+public void onEnable() {
+    GuiManager guiManager = new GuiManager(this);
+
+    Actions.registerAction("teleport", (manager, args) -> createTeleportAction(args));
+}
+
+private GuiAction createTeleportAction(String args) {
+    String[] parts = args.split(" ");
+    double x = Double.parseDouble(parts[0]);
+    double y = Double.parseDouble(parts[1]);
+    double z = Double.parseDouble(parts[2]);
+
+    return player -> player.teleport(new Location(player.getWorld(), x, y, z));
+}
+```
+
+В YAML меню можно использовать строку `teleport 0 80 0`, и зарегистрированная фабрика получит аргументы после названия действия.
+
+Используйте `GuiManager`, переданный в фабрику, если действию нужно взаимодействовать с другими GUI (`manager.openGui(...)`).
+
+---
+
+## Database Manager & Schema Generator
+
+Новая подсистема баз данных объединяет управление подключениями и автогенерацию Java-кода из YAML-схемы по аналогии с Prisma.
+
+### Регистрация подключений
+
+```java
+import io.github.chi2l3s.nextlib.api.database.DatabaseConfig;
+import io.github.chi2l3s.nextlib.api.database.DatabaseManager;
+import io.github.chi2l3s.nextlib.api.database.DatabaseType;
+
+DatabaseManager databases = new DatabaseManager();
+databases.register("main", DatabaseConfig.builder(DatabaseType.MYSQL)
+        .host("127.0.0.1")
+        .port(3306)
+        .database("nextlib")
+        .username("user")
+        .password("secret")
+        .build());
+
+// Поддерживаются также DatabaseType.POSTGRESQL и DatabaseType.SQLITE (через .file("plugins/MyPlugin/data.db"))
+```
+
+`DatabaseManager` возвращает `DatabaseClient`, который предоставляет вспомогательные методы `query`, `queryOne`, `execute` и `executeBatch` поверх `PreparedStatement`.
+
+### Описание схемы и генерация
+
+Создайте YAML-файл `database.schema.yml`:
+
+```yaml
+packageName: io.github.example.generated
+datasource: main
+tables:
+  - name: User
+    tableName: users
+    fields:
+      - name: id
+        type: UUID
+        id: true
+      - name: username
+        type: STRING
+      - name: coins
+        type: INT
+      - name: createdAt
+        type: TIMESTAMP
+```
+
+Запустите генератор в Gradle-задаче или в отдельном `main`:
+
+```java
+import io.github.chi2l3s.nextlib.api.database.schema.SchemaGenerator;
+
+new SchemaGenerator().generate(
+        Path.of("src/main/resources/database.schema.yml"),
+        Path.of("build/generated/sources/nextlib"));
+```
+
+Подключите папку сгенерированных классов к `sourceSets` Gradle:
+
+```gradle
+sourceSets.main.java.srcDir("build/generated/sources/nextlib")
+```
+
+### Использование сгенерированных репозиториев
+
+Генератор создаст `UserRecord` и `UserRepository` с методами `insert`, `findById`, `findAll`, `update`, `deleteById`:
+
+```java
+import io.github.example.generated.UserRecord;
+import io.github.example.generated.UserRepository;
+
+UserRepository users = UserRepository.using(databases);
+
+users.insert(new UserRecord(
+        UUID.randomUUID(),
+        "Notch",
+        100,
+        Instant.now()
+));
+
+Optional<UserRecord> notch = users.findById(playerUuid);
+notch.ifPresent(record -> {
+    getLogger().info("Баланс игрока: " + record.getCoins());
+});
+```
+
+Весь SQL генерируется автоматически, а репозитории используют именованный источник `datasource` из схемы, поэтому достаточно один раз зарегистрировать подключение.
+
 ---
 
 ## Roadmap
@@ -231,7 +353,7 @@ public void onEnable() {
 * [x] Color API
 * [x] Config Manager
 * [x] GUI API с конфигами
-* [ ] GUI Action Registry (кастомные действия)
+* [x] GUI Action Registry (кастомные действия)
 * [ ] SQL/Redis API
 * [ ] Event Utilities
 
