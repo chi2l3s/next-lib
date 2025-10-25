@@ -6,6 +6,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class GuiLoader {
     public static Gui load(JavaPlugin plugin, GuiManager manager, ConfigurationSection section) {
@@ -31,26 +32,24 @@ public class GuiLoader {
                         slot
                 );
 
-                for (String act: itemSec.getStringList("on_left_click")) {
-                    if (act.equalsIgnoreCase("close")) guiItem.addLeftClickAction(Actions.close());
-                    else if (act.startsWith("command ")) guiItem.addLeftClickAction(Actions.command(act.substring(8)));
-                    else if (act.startsWith("console ")) guiItem.addLeftClickAction(Actions.console(act.substring(8)));
-                    else if (act.startsWith("message ")) guiItem.addLeftClickAction(Actions.message(act.substring(8)));
-                    else if (act.startsWith("opengui ")) guiItem.addLeftClickAction(Actions.openGui(manager, act.substring(8)));
-                }
-
-                for (String act : itemSec.getStringList("on_right_click")) {
-                    if (act.equalsIgnoreCase("close")) guiItem.addRightClickAction(Actions.close());
-                    else if (act.startsWith("command ")) guiItem.addRightClickAction(Actions.command(act.substring(8)));
-                    else if (act.startsWith("console ")) guiItem.addRightClickAction(Actions.console(act.substring(8)));
-                    else if (act.startsWith("message ")) guiItem.addRightClickAction(Actions.message(act.substring(8)));
-                    else if (act.startsWith("opengui ")) guiItem.addRightClickAction(Actions.openGui(manager, act.substring(8)));
-                }
+                applyActions(plugin, manager, itemSec.getStringList("on_left_click"), guiItem::addLeftClickAction, key, "left");
+                applyActions(plugin, manager, itemSec.getStringList("on_right_click"), guiItem::addRightClickAction, key, "right");
 
                 gui.addItem(guiItem);
             }
 
         }
         return gui;
+    }
+
+    private static void applyActions(JavaPlugin plugin, GuiManager manager, List<String> rawActions, Consumer<GuiAction> target, String itemKey, String clickType) {
+        for (String rawAction: rawActions) {
+            GuiAction action = Actions.create(rawAction, manager);
+            if (action != null) {
+                target.accept(action);
+            } else {
+                plugin.getLogger().warning("Unknown GUI action '" + rawAction + "' for item '" + itemKey + "' on " + clickType + " click.");
+            }
+        }
     }
 }
