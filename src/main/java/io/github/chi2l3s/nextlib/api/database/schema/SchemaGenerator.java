@@ -373,9 +373,10 @@ public final class SchemaGenerator {
                                 field.getType().getJavaType(true), variableName, variableName, variableName);
                 break;
             case UUID:
-                builder.addStatement("final Object uuidRaw$N = resultSet.getObject($S)", variableName, columnName)
-                        .addStatement("final $T $N = uuidRaw$N == null ? null : (uuidRaw$N instanceof $T ? ($T) uuidRaw$N : $T.fromString(uuidRaw$N.toString()))",
-                                UUID.class, variableName, variableName, variableName, UUID.class, UUID.class, UUID.class, variableName);
+                String rawVariable = variableName + "Raw";
+                builder.addStatement("final Object $L = resultSet.getObject($S)", rawVariable, columnName)
+                        .addStatement("final $T $N = $L == null ? null : ($L instanceof $T ? ($T) $L : $T.fromString($L.toString()))",
+                                UUID.class, variableName, rawVariable, rawVariable, UUID.class, UUID.class, rawVariable, UUID.class, rawVariable);
                 break;
             default:
                 throw new DatabaseException("Unsupported field type: " + field.getType());
