@@ -205,7 +205,9 @@ public final class SchemaGenerator {
         }
         sql.append(")");
         builder.addStatement("final String sql = $S", sql.toString());
-        builder.addStatement("client.execute(sql, $L)", buildStatementLambda(buildStatementBinder(table)));
+        builder.addCode("client.execute(sql, ")
+                .addCode(buildStatementLambda(buildStatementBinder(table)))
+                .addCode(");\n");
         return builder.build();
     }
 
@@ -217,9 +219,10 @@ public final class SchemaGenerator {
                 .returns(ParameterizedTypeName.get(ClassName.get(Optional.class), recordType))
                 .addParameter(idType, "id")
                 .addStatement("final String sql = $S",
-                        "SELECT * FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?")
-                .addStatement("return client.queryOne(sql, $L, resultSet -> mapRow(resultSet))",
-                        buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)));
+                        "SELECT * FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?");
+        builder.addCode("return client.queryOne(sql, ")
+                .addCode(buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)))
+                .addCode(", resultSet -> mapRow(resultSet));\n");
         return builder.build();
     }
 
@@ -249,8 +252,9 @@ public final class SchemaGenerator {
         builder.addStatement("final String sql = $S",
                 "UPDATE " + table.getTableName() + " SET " + assignments +
                         " WHERE " + columnName(idField) + " = ?");
-        builder.addStatement("client.execute(sql, $L)",
-                buildStatementLambda(buildUpdateBinder(table)));
+        builder.addCode("client.execute(sql, ")
+                .addCode(buildStatementLambda(buildUpdateBinder(table)))
+                .addCode(");\n");
         return builder.build();
     }
 
@@ -261,9 +265,10 @@ public final class SchemaGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(idType, "id")
                 .addStatement("final String sql = $S",
-                        "DELETE FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?")
-                .addStatement("client.execute(sql, $L)",
-                        buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)));
+                        "DELETE FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?");
+        builder.addCode("client.execute(sql, ")
+                .addCode(buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)))
+                .addCode(");\n");
         return builder.build();
     }
 
