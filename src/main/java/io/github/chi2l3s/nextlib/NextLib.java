@@ -14,7 +14,7 @@ public final class NextLib extends JavaPlugin {
     public void onEnable() {
         new UpdateChecker(this, "chi2l3s/next-lib").checkForUpdates();
         int pluginId = 27705;
-        Metrics metrics = new Metrics(this, pluginId);
+        new Metrics(this, pluginId);
     }
 
     @Override
