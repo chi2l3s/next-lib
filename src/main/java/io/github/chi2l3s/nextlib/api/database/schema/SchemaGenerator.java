@@ -32,13 +32,24 @@ import java.util.stream.Collectors;
 
 public final class SchemaGenerator {
     private final SchemaParser parser = new SchemaParser();
+    private final SchemaDdlWriter ddlWriter = new SchemaDdlWriter();
 
     public void generate(Path schemaPath, Path outputDirectory) {
+        generate(schemaPath, outputDirectory, null);
+    }
+
+    public void generate(Path schemaPath, Path outputDirectory, Path ddlOutputFile) {
         SchemaDefinition schemaDefinition = parser.parse(schemaPath);
-        generate(schemaDefinition, outputDirectory);
+        generate(schemaDefinition, outputDirectory, ddlOutputFile);
     }
 
     public void generate(SchemaDefinition schema, Path outputDirectory) {
+        generate(schema, outputDirectory, null);
+    }
+
+    public void generate(SchemaDefinition schema, Path outputDirectory, Path ddlOutputFile) {
+        Objects.requireNonNull(schema, "schema");
+        Objects.requireNonNull(outputDirectory, "outputDirectory");
         try {
             Files.createDirectories(outputDirectory);
             for (TableDefinition table : schema.getTables()) {
@@ -51,6 +62,9 @@ public final class SchemaGenerator {
                 JavaFile.builder(schema.getPackageName(), repositoryClass)
                         .build()
                         .writeTo(outputDirectory);
+            }
+            if (ddlOutputFile != null) {
+                ddlWriter.writeToFile(schema, ddlOutputFile);
             }
         } catch (IOException exception) {
             throw new SchemaParseException("Failed to write generated sources", exception);
@@ -191,9 +205,7 @@ public final class SchemaGenerator {
         }
         sql.append(")");
         builder.addStatement("final String sql = $S", sql.toString());
-        builder.addCode("client.execute(sql, ")
-                .addCode(buildStatementLambda(buildStatementBinder(table)))
-                .addCode(");\n");
+        builder.addStatement("client.execute(sql, $L)", buildStatementLambda(buildStatementBinder(table)));
         return builder.build();
     }
 
@@ -205,10 +217,9 @@ public final class SchemaGenerator {
                 .returns(ParameterizedTypeName.get(ClassName.get(Optional.class), recordType))
                 .addParameter(idType, "id")
                 .addStatement("final String sql = $S",
-                        "SELECT * FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?");
-        builder.addCode("return client.queryOne(sql, ")
-                .addCode(buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)))
-                .addCode(", resultSet -> mapRow(resultSet));\n");
+                        "SELECT * FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?")
+                .addStatement("return client.queryOne(sql, $L, resultSet -> mapRow(resultSet))",
+                        buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)));
         return builder.build();
     }
 
@@ -238,9 +249,8 @@ public final class SchemaGenerator {
         builder.addStatement("final String sql = $S",
                 "UPDATE " + table.getTableName() + " SET " + assignments +
                         " WHERE " + columnName(idField) + " = ?");
-        builder.addCode("client.execute(sql, ")
-                .addCode(buildStatementLambda(buildUpdateBinder(table)))
-                .addCode(");\n");
+        builder.addStatement("client.execute(sql, $L)",
+                buildStatementLambda(buildUpdateBinder(table)));
         return builder.build();
     }
 
@@ -251,10 +261,9 @@ public final class SchemaGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(idType, "id")
                 .addStatement("final String sql = $S",
-                        "DELETE FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?");
-        builder.addCode("client.execute(sql, ")
-                .addCode(buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)))
-                .addCode(");\n");
+                        "DELETE FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?")
+                .addStatement("client.execute(sql, $L)",
+                        buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)));
         return builder.build();
     }
 
