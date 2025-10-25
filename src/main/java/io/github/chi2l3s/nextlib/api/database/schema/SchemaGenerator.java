@@ -191,7 +191,7 @@ public final class SchemaGenerator {
         }
         sql.append(")");
         builder.addStatement("final String sql = $S", sql.toString());
-        builder.addStatement("client.execute(sql, statement -> {\n$L\n        })", buildStatementBinder(table));
+        builder.addStatement("client.execute(sql, $L)", buildStatementLambda(buildStatementBinder(table)));
         return builder.build();
     }
 
@@ -204,8 +204,8 @@ public final class SchemaGenerator {
                 .addParameter(idType, "id")
                 .addStatement("final String sql = $S",
                         "SELECT * FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?")
-                .addStatement("return client.queryOne(sql, statement -> $L, resultSet -> mapRow(resultSet))",
-                        buildSingleParameterBinder(idField, "id", 1));
+                .addStatement("return client.queryOne(sql, $L, resultSet -> mapRow(resultSet))",
+                        buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)));
         return builder.build();
     }
 
@@ -235,8 +235,8 @@ public final class SchemaGenerator {
         builder.addStatement("final String sql = $S",
                 "UPDATE " + table.getTableName() + " SET " + assignments +
                         " WHERE " + columnName(idField) + " = ?");
-        builder.addStatement("client.execute(sql, statement -> {\n$L\n        })",
-                buildUpdateBinder(table));
+        builder.addStatement("client.execute(sql, $L)",
+                buildStatementLambda(buildUpdateBinder(table)));
         return builder.build();
     }
 
@@ -248,8 +248,8 @@ public final class SchemaGenerator {
                 .addParameter(idType, "id")
                 .addStatement("final String sql = $S",
                         "DELETE FROM " + table.getTableName() + " WHERE " + columnName(idField) + " = ?")
-                .addStatement("client.execute(sql, statement -> $L)",
-                        buildSingleParameterBinder(idField, "id", 1));
+                .addStatement("client.execute(sql, $L)",
+                        buildStatementLambda(buildSingleParameterBinder(idField, "id", 1)));
         return builder.build();
     }
 
@@ -278,7 +278,7 @@ public final class SchemaGenerator {
 
     private CodeBlock buildFieldBinding(FieldDefinition field, String accessor, int index) {
         CodeBlock.Builder builder = CodeBlock.builder();
-        builder.add("        final $T value$L = $L;\n", field.getType().getJavaType(true), index, accessor);
+        builder.addStatement("final $T value$L = $L", field.getType().getJavaType(true), index, accessor);
         String statement;
         switch (field.getType()) {
             case STRING:
@@ -302,12 +302,12 @@ public final class SchemaGenerator {
                 statement = "statement.setBigDecimal($L, value$L)";
                 break;
             case TIMESTAMP:
-                builder.add("        final $T timestamp$L = value$L != null ? $T.from(value$L) : null;\n",
+                builder.addStatement("final $T timestamp$L = value$L != null ? $T.from(value$L) : null",
                         Timestamp.class, index, index, Timestamp.class, index);
                 statement = "statement.setTimestamp($L, timestamp$L)";
                 break;
             case DATE:
-                builder.add("        final $T date$L = value$L != null ? $T.valueOf(value$L) : null;\n",
+                builder.addStatement("final $T date$L = value$L != null ? $T.valueOf(value$L) : null",
                         Date.class, index, index, Date.class, index);
                 statement = "statement.setDate($L, date$L)";
                 break;
@@ -331,6 +331,16 @@ public final class SchemaGenerator {
 
     private CodeBlock buildSingleParameterBinder(FieldDefinition field, String valueRef, int index) {
         return buildFieldBinding(field, valueRef, index);
+    }
+
+    private CodeBlock buildStatementLambda(CodeBlock body) {
+        return CodeBlock.builder()
+                .add("statement -> {\n")
+                .indent()
+                .add(body)
+                .unindent()
+                .add("}")
+                .build();
     }
 
     private CodeBlock readFieldFromResultSet(FieldDefinition field, String columnName, String variableName) {
@@ -374,8 +384,8 @@ public final class SchemaGenerator {
                 break;
             case UUID:
                 String rawVariable = variableName + "Raw";
-                builder.addStatement("final Object $L = resultSet.getObject($S)", rawVariable, columnName)
-                        .addStatement("final $T $N = $L == null ? null : ($L instanceof $T ? ($T) $L : $T.fromString($L.toString()))",
+                builder.addStatement("final Object $N = resultSet.getObject($S)", rawVariable, columnName)
+                        .addStatement("final $T $N = $N == null ? null : ($N instanceof $T ? ($T) $N : $T.fromString($N.toString()))",
                                 UUID.class, variableName, rawVariable, rawVariable, UUID.class, UUID.class, rawVariable, UUID.class, rawVariable);
                 break;
             default:
