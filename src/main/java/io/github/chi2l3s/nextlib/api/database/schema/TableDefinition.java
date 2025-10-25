@@ -1,24 +1,22 @@
 package io.github.chi2l3s.nextlib.api.database.schema;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Setter
 public final class TableDefinition {
+    @Getter
     private String name;
     private String tableName;
+    @Getter
     private List<FieldDefinition> fields = new ArrayList<>();
-
-    public String getName() {
-        return name;
-    }
 
     public String getTableName() {
         return tableName != null ? tableName : name.toLowerCase();
-    }
-
-    public List<FieldDefinition> getFields() {
-        return fields;
     }
 
     public void validate() {
