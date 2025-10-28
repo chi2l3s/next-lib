@@ -14,10 +14,12 @@ public abstract class BaseConfig {
     protected File file;
     @Getter
     protected FileConfiguration config;
+    protected boolean update;
 
-    public BaseConfig(JavaPlugin plugin, String fileName) {
+    public BaseConfig(JavaPlugin plugin, String fileName, boolean update) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), fileName);
+        this.update = update;
     }
 
     public void reloadConfig() {
@@ -26,10 +28,12 @@ public abstract class BaseConfig {
         }
         config = YamlConfiguration.loadConfiguration(file);
 
-        try {
-            ConfigUpdater.update(plugin, file.getName(), file);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Failed to update config: " + e.getMessage());
+        if (update) {
+            try {
+                ConfigUpdater.update(plugin, file.getName(), file);
+            } catch (IOException e) {
+                plugin.getLogger().severe("Failed to update config: " + e.getMessage());
+            }
         }
 
         loadValues();

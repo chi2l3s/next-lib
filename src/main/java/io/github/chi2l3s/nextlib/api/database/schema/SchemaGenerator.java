@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Deprecated
 public final class SchemaGenerator {
     private final SchemaParser parser = new SchemaParser();
     private final SchemaDdlWriter ddlWriter = new SchemaDdlWriter();

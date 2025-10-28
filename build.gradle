@@ -1,9 +1,10 @@
 plugins {
     id 'java'
+    id 'maven-publish'
 }
 
 group = 'io.github.chi2l3s'
-version = '1.0.3'
+version = '1.0.5'
 
 repositories {
     mavenCentral()
@@ -23,6 +24,28 @@ dependencies {
     implementation 'com.tchristofferson:ConfigUpdater:2.2'
     implementation 'org.yaml:snakeyaml:2.2'
     implementation 'com.squareup:javapoet:1.13.0'
+    implementation 'com.zaxxer:HikariCP:7.0.2'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'io.github.chi2l3s'
+            artifactId = 'nextlib'
+            version = version
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url = "http://localhost:8081/nexus/content/repositories/nextrepo/"
+            allowInsecureProtocol = true
+            credentials {
+                username = 'admin'
+                password = 'admin123'
+            }
+        }
+    }
 }
 
 def targetJavaVersion = 17

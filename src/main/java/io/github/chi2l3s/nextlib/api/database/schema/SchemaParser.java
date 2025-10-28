@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@Deprecated
 public final class SchemaParser {
     private final Yaml yaml;
 
@@ -19,6 +20,19 @@ public final class SchemaParser {
         propertyUtils.setSkipMissingProperties(true);
         constructor.setPropertyUtils(propertyUtils);
         this.yaml = new Yaml(constructor);
+    }
+
+    public SchemaDefinition parse(Reader reader) {
+        try {
+            SchemaDefinition definition = yaml.load(reader);
+            if (definition == null) {
+                throw new SchemaParseException("Schema is empty");
+            }
+            definition.validate();
+            return definition;
+        } catch (RuntimeException exception) {
+            throw new SchemaParseException("Failed to parse schema", exception);
+        }
     }
 
     public SchemaDefinition parse(Path schemaPath) {

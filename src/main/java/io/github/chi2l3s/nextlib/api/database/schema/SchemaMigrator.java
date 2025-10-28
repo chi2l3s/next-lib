@@ -17,6 +17,7 @@ import java.util.Objects;
  * for each declared table. This keeps database bootstrapping simple for plugins that
  * ship the generated repositories inside their JARs.
  */
+@Deprecated
 public final class SchemaMigrator {
     private final SchemaParser parser = new SchemaParser();
 

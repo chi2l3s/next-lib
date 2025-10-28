@@ -16,6 +16,7 @@ import java.util.Objects;
  * build time, so plugins may ship the DDL alongside the compiled repositories and execute it when
  * a datasource becomes available at runtime.
  */
+@Deprecated
 public final class SchemaDdlWriter {
 
     /**

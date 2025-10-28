@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import java.util.Objects;
 
+@Deprecated
 @Setter
 @Getter
 public final class FieldDefinition {

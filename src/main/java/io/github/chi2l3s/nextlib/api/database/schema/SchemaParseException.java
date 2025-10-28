@@ -1,5 +1,6 @@
 package io.github.chi2l3s.nextlib.api.database.schema;
 
+@Deprecated
 public class SchemaParseException extends RuntimeException {
     public SchemaParseException(String message) {
         super(message);

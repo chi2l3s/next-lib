@@ -5,3 +5,4 @@ api-version: '1.16'
 softdepend: ["PlaceholderAPI"]
 libraries:
   - com.tchristofferson:ConfigUpdater:2.2
+  - com.zaxxer:HikariCP:7.0.2

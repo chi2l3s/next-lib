@@ -11,6 +11,7 @@ import java.util.UUID;
 /**
  * Supported column types for the code generator.
  */
+@Deprecated
 public enum FieldType {
     STRING("VARCHAR(255)", ClassName.get(String.class)),
     TEXT("TEXT", ClassName.get(String.class)),
