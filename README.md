@@ -1,4 +1,4 @@
-# NextLib
+[# NextLib
 
 [![](https://jitpack.io/v/chi2l3s/next-lib.svg)](https://jitpack.io/#chi2l3s/next-lib)
 [![CodeFactor](https://www.codefactor.io/repository/github/chi2l3s/next-lib/badge)](https://www.codefactor.io/repository/github/chi2l3s/next-lib)
@@ -241,4 +241,4 @@ public void onEnable() {
 
 MIT License © 2025 NextGenTech
 
----
+---](https://github.com/chi2l3s/next-lib)
