@@ -1,5 +1,6 @@
 package io.github.chi2l3s.nextlib.api.gui;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -8,28 +9,53 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class GuiManager {
     private final JavaPlugin plugin;
     private final Map<String, Gui> guis = new HashMap<>();
+    private final Map<UUID, String> openGuiIds = new HashMap<>();
+    private File menusFolder;
 
     public GuiManager(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
     public void loadFromFolder(File folder) {
-        if (!folder.exists()) {
-            folder.mkdirs();
-            plugin.getLogger().info("Created menus folder: " + folder.getAbsolutePath());
-        }
+        this.menusFolder = folder;
+        reloadAll();
+    }
 
-        File[] files = folder.listFiles((((dir, name) -> name.endsWith(".yml"))));
-        if (files == null || files.length == 0) {
-            plugin.getLogger().warning("No menus found in " + folder.getAbsolutePath());
+    public void reloadAll() {
+        if (menusFolder == null) {
+            plugin.getLogger().warning("Menus folder not configured; call loadFromFolder first.");
             return;
         }
 
-        for (File file: files) {
+        if (!openGuiIds.isEmpty()) {
+            for (UUID uuid : new java.util.ArrayList<>(openGuiIds.keySet())) {
+                Player player = Bukkit.getPlayer(uuid);
+                if (player != null) {
+                    player.closeInventory();
+                }
+            }
+            openGuiIds.clear();
+        }
+
+        guis.clear();
+
+        if (!menusFolder.exists()) {
+            menusFolder.mkdirs();
+            plugin.getLogger().info("Created menus folder: " + menusFolder.getAbsolutePath());
+        }
+
+        File[] files = menusFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+        if (files == null || files.length == 0) {
+            plugin.getLogger().warning("No menus found in " + menusFolder.getAbsolutePath());
+            return;
+        }
+
+        for (File file : files) {
             FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
             String id = file.getName().replace(".yml", "");
@@ -49,6 +75,7 @@ public class GuiManager {
         Gui gui = guis.get(id.toLowerCase());
         if (gui != null) {
             gui.open(player);
+            openGuiIds.put(player.getUniqueId(), id.toLowerCase());
         } else {
             plugin.getLogger().warning("GUI '" + id + "' not found!");
         }
@@ -56,5 +83,21 @@ public class GuiManager {
 
     public Map<String, Gui> getAllGuis() {
         return guis;
+    }
+
+    public void refresh(Player player) {
+        UUID uuid = player.getUniqueId();
+        String guiId = openGuiIds.get(uuid);
+        if (guiId == null) {
+            plugin.getLogger().warning("Player '" + player.getName() + "' does not have an open GUI to refresh.");
+            return;
+        }
+
+        player.closeInventory();
+        Bukkit.getScheduler().runTask(plugin, () -> openGui(player, guiId));
+    }
+
+    void handleClose(Player player) {
+        openGuiIds.remove(player.getUniqueId());
     }
 }

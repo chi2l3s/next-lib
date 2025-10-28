@@ -23,6 +23,7 @@ dependencies {
     implementation 'com.tchristofferson:ConfigUpdater:2.2'
     implementation 'org.yaml:snakeyaml:2.2'
     implementation 'com.squareup:javapoet:1.13.0'
+    implementation 'com.zaxxer:HikariCP:5.1.0'
 }
 
 def targetJavaVersion = 17

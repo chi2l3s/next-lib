@@ -3,8 +3,10 @@ package io.github.chi2l3s.nextlib.api.gui;
 import io.github.chi2l3s.nextlib.NextLib;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +20,8 @@ public final class Actions {
         registerAction("console", (manager, args) -> console(args));
         registerAction("message", (manager, args) -> message(args));
         registerAction("opengui", Actions::openGui);
+        registerAction("update", (manager, args) -> update(manager));
+        registerAction("playsound", (manager, args) -> playSound(args));
     }
 
     private Actions() {}
@@ -40,6 +44,42 @@ public final class Actions {
 
     public static GuiAction openGui(GuiManager manager, String guiId) {
         return player -> manager.openGui(player, guiId);
+    }
+
+    public static GuiAction update(GuiManager manager) {
+        return manager::refresh;
+    }
+
+    public static GuiAction playSound(String args) {
+        if (args == null || args.isBlank()) {
+            return player -> {};
+        }
+
+        String[] parts = args.trim().split("\\s+");
+        String soundName = parts[0].toUpperCase(Locale.ROOT);
+        Sound sound;
+        try {
+            sound = Sound.valueOf(soundName);
+        } catch (IllegalArgumentException exception) {
+            Bukkit.getLogger().warning("Unknown sound '" + soundName + "' for playsound action");
+            return player -> {};
+        }
+
+        float volume = parseFloat(parts, 1, 1.0f);
+        float pitch = parseFloat(parts, 2, 1.0f);
+
+        return player -> player.playSound(player.getLocation(), sound, volume, pitch);
+    }
+
+    private static float parseFloat(String[] parts, int index, float defaultValue) {
+        if (index >= parts.length) {
+            return defaultValue;
+        }
+        try {
+            return Float.parseFloat(parts[index]);
+        } catch (NumberFormatException exception) {
+            return defaultValue;
+        }
     }
 
     /**
