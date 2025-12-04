@@ -10,14 +10,55 @@
 ![GitHub issues](https://img.shields.io/github/issues/chi2l3s/next-lib)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/chi2l3s/next-lib)
 
-**NextLib** — это лёгкая библиотека для разработки Minecraft-плагинов на Paper/Spigot.
-Она упрощает работу с командами, предметами, цветами и GUI-меню, включая загрузку меню из YAML файлов.
+**NextLib** — это модульная библиотека для плагинов Paper/Spigot, которая закрывает базовые задачи разработки: работу с конфигами, GUI, предметами и базами данных. Все модули ориентированы на декларативный стиль и удобную интеграцию в существующие проекты.
+
+---
+
+## Содержание
+
+1. [Особенности](#особенности)
+2. [Установка](#установка)
+3. [Быстрый старт](#быстрый-старт)
+4. [Основные модули](#основные-модули)
+5. [Динамическая база данных](#динамическая-база-данных)
+6. [GUI API и условия](#gui-api-и-условия)
+7. [Работа с конфигами](#работа-с-конфигами)
+8. [Полезные ссылки](#полезные-ссылки)
+9. [Roadmap](#roadmap)
+10. [Лицензия](#лицензия)
+
+---
+
+## Особенности
+
+* **Динамическая база данных** — описывайте сущности через обычные Java-классы и аннотации, а библиотека сама создаёт таблицы и даёт удобный Fluent API для CRUD-операций.
+* **Подключение к базе через HikariCP** — готовый пул соединений с настраиваемыми параметрами.
+* **Гибкое GUI** — загрузка меню из YAML, условия для отображения и встроенные действия (`update`, `playsound`, `command`, `opengui` и др.).
+* **Command API** — дерево сабкоманд с автодополнением.
+* **Item API** — лаконичные билдеры предметов с поддержкой PDC, названий, лора и голов.
+* **Color API** — форматирование HEX и `&` кодов без лишнего кода.
+* **Config Manager** — декларативная загрузка YAML конфигов в Java-объекты.
 
 ---
 
 ## Установка
 
-### Gradle
+Добавьте JitPack-репозиторий и зависимость `1.0.5` в ваш build-скрипт.
+
+### Gradle (Kotlin DSL)
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    implementation("com.github.chi2l3s:next-lib:1.0.5")
+}
+```
+
+### Gradle (Groovy DSL)
 
 ```gradle
 repositories {
@@ -26,7 +67,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.chi2l3s:next-lib:1.0.0'
+    implementation 'com.github.chi2l3s:next-lib:1.0.5'
 }
 ```
 
@@ -41,199 +82,188 @@ dependencies {
 </repositories>
 
 <dependency>
-<groupId>com.github.chi2l3s</groupId>
-<artifactId>next-lib</artifactId>
-<version>1.0.0</version>
-<scope>provided</scope>
+    <groupId>com.github.chi2l3s</groupId>
+    <artifactId>next-lib</artifactId>
+    <version>1.0.5</version>
+    <scope>provided</scope>
 </dependency>
 ```
 
 ---
 
-## Возможности
+## Быстрый старт
 
-* Color API — поддержка HEX и `&` цветовых кодов.
-* Command API — система сабкоманд с автодополнением.
-* Item API — быстрый билдер предметов (имя, лор, PDC, скины).
-* Config Manager — удобная работа с YAML конфигами.
-* GUI API — создание меню через YAML файлы в папке `menus/`.
-
----
-
-## Color API
+1. Скачайте библиотеку через JitPack и добавьте её как зависимость.
+2. Создайте экземпляр `GuiManager` и загрузите меню из папки `menus/`.
+3. Опишите сущности базы данных Java-классами, аннотируйте первичный ключ `@PrimaryKey` и зарегистрируйте их в `DynamicDatabase`.
+4. Используйте предоставленные API для команд, предметов и конфигураций — весь функционал доступен из пространства имён `io.github.chi2l3s.nextlib.api`.
 
 ```java
-import ru.amixoldev.nextlib.color.ColorUtil;
-import ru.amixoldev.nextlib.color.ColorUtilImpl;
+public final class NextTrapsPlugin extends JavaPlugin {
+    private DynamicDatabase database;
+    private GuiManager guiManager;
 
-ColorUtil color = new ColorUtilImpl();
+    @Override
+    public void onEnable() {
+        database = DatabaseManager.createDynamicDatabase(this, "jdbc:mysql://localhost:3306/nexttraps", config -> {
+            config.setUsername("root");
+            config.setPassword("password");
+            config.setMaximumPoolSize(10);
+        });
 
-player.sendMessage(color.formatMessage("&aHello &bWorld &#FF0000!"));
-```
+        database.register(PlayerEntity.class);
 
-Поддерживает HEX (`&#RRGGBB`) и стандартные `&` коды.
-
----
-
-## Command API
-
-```java
-public class ExampleCommand extends LongCommandExecutor {
-
-    public ExampleCommand() {
-        addSubCommand(new SubCommand() {
-            @Override
-            public void onExecute(CommandSender sender, String[] args) {
-                sender.sendMessage("Hello from subcommand!");
-            }
-
-            @Override
-            public List<String> onTabComplete(CommandSender sender, String[] args) {
-                return List.of("one", "two", "three");
-            }
-        }, new String[]{"test", "t"}, new Permission("example.use"));
+        guiManager = new GuiManager(this);
+        guiManager.loadFromFolder(new File(getDataFolder(), "menus"));
     }
 }
 ```
 
-Регистрируй команду в `onEnable()`:
-
-```java
-getCommand("example").setExecutor(new ExampleCommand());
-```
-
 ---
 
-## Item API
+## Основные модули
+
+### Command API
+
+* Структурируйте команды через сабкоманды и permissions.
+* Поддержка автодополнения и алиасов.
+* Подключается одной строкой в `onEnable()`.
 
 ```java
-ItemStack item = new ItemBuilder(Material.DIAMOND_SWORD)
-        .setName("&bМеч силы")
-        .setLore(List.of("&7Очень острый меч", "&e+10 к силе"))
-        .addPersistentTag("power", PersistentDataType.INTEGER, 10)
+getCommand("nextlib").setExecutor(new RootCommand());
+```
+
+### Item API
+
+* Флюент-билдеры для `ItemStack` с настройкой имени, описания, флагов и `PersistentDataContainer`.
+* Поддержка установки владельца головы и массовых изменений меты.
+
+```java
+ItemStack reward = new ItemBuilder(Material.DIAMOND)
+        .setName("&bНаграда дня")
+        .setLore(List.of("&7Нажми, чтобы получить"))
+        .addPersistentTag("reward", PersistentDataType.STRING, "daily")
+        .glow()
         .build();
 ```
 
-Поддержка:
+### Color API
 
-* имени (`setName`)
-* лора (`setLore`)
-* `PersistentDataContainer` (`addPersistentTag`)
-* скинов (`setSkullOwner`)
-
----
-
-## Config Manager
+* Единый метод форматирования, который переводит `&` и HEX (`&#RRGGBB`) в цветные сообщения.
 
 ```java
-Config config = new Config(this);
-config.reloadConfig();
-
-String prefix = config.getPrefix();
-int countdown = config.getCountdown();
+player.sendMessage(color.format("&aДобро пожаловать в &#3498dbNextLib"));
 ```
 
-Поддержка:
+### Config Manager
 
-* Автосоздание конфига, если он отсутствует.
-* Парсинг в Java-поля.
-* Автоматическое обновление с помощью `ConfigUpdater`.
+* Базовый класс `BaseConfig` автоматически создаёт и обновляет YAML-файлы.
+* Данные загружаются в Java-поля или DTO.
 
 ---
 
-## GUI API
+## Динамическая база данных
 
-Меню хранятся в папке `plugins/YourPlugin/menus/`.
-Каждый `.yml` файл = отдельное меню.
+* Определяйте сущность привычным Java-классом.
+* Аннотация `@PrimaryKey` помечает поле первичного ключа.
+* `DynamicTable` предоставляет методы `findFirst`, `findMany`, `create`, `update` и `delete`.
 
-### main.yml
+```java
+@AllArgsConstructor
+@Getter
+public class PlayerEntity {
+    @PrimaryKey
+    private final UUID playerId;
+    private final String nickname;
+    private final String trapSkinId;
+}
 
-```yaml
-id: "main"
-title: "&0Главное меню"
-size: 54
-items:
-  close:
-    material: BARRIER
-    slot: 53
-    name: "&cЗакрыть"
-    onLeftClick:
-      - "close"
+DynamicTable<PlayerEntity> players = database.table(PlayerEntity.class);
 
-  diamond:
-    material: DIAMOND
-    slot: 0
-    amount: 1
-    name: "&bНаграда"
-    lore:
-      - "Нажмите, чтобы получить"
-    onLeftClick:
-      - "console give %player% diamond 64"
-      - "message &aВы получили награду!"
-      - "opengui shop"
+String trapSkinId = players.findFirst()
+        .where("playerId", playerId)
+        .execute()
+        .map(PlayerEntity::getTrapSkinId)
+        .orElse("fallback");
 ```
 
-### shop.yml
+Подробнее — в отдельном руководстве [`docs/dynamic-database.md`](docs/dynamic-database.md).
+
+---
+
+## GUI API и условия
+
+* Меню описываются YAML-файлами в `plugins/<ВашПлагин>/menus`.
+* Поле `slot` принимает одиночное значение, а `slots` — список произвольных слотов или диапазонов `A-B`.
+* Можно регистрировать собственные условия (`Conditions#register`) и использовать их для подсветки предметов или ограничения взаимодействия.
+* Встроенные действия: `close`, `command`, `console`, `message`, `opengui`, `update`, `playsound`.
 
 ```yaml
-id: "shop"
-title: "&aМагазин"
-size: 27
+id: traps
+title: "&8Выбор ловушки"
+size: 54
 items:
   back:
     material: ARROW
-    slot: 26
+    slot: 53
     name: "&7Назад"
     onLeftClick:
       - "opengui main"
+  trap:
+    material: TRIPWIRE_HOOK
+    slots:
+      - 0-8
+      - 18
+    name: "&b%trap_name%"
+    lore:
+      - "&7Стоимость: &e%price%"
+    enchanted_when:
+      - "selected"
+    onLeftClick:
+      - "update"
+      - "playsound ENTITY_ENDER_DRAGON_AMBIENT 0.7 1.2"
 ```
 
-### Использование в плагине
+Подробное руководство и примеры — в [`docs/gui-conditions.md`](docs/gui-conditions.md).
+
+---
+
+## Работа с конфигами
+
+* Наследуйтесь от `BaseConfig`, чтобы получить автоматическое создание и обновление файлов.
+* Используйте `loadValues()` для чтения данных и связывайте их с объектами вашего домена.
 
 ```java
-GuiManager guiManager;
-
-@Override
-public void onEnable() {
-    guiManager = new GuiManager(this);
-
-    // Загружаем все меню из папки /menus
-    File menusFolder = new File(getDataFolder(), "menus");
-    guiManager.loadFromFolder(menusFolder);
-
-    // Команда для открытия меню
-    getCommand("menu").setExecutor((sender, cmd, label, args) -> {
-        if (sender instanceof Player player) {
-            String id = args.length > 0 ? args[0] : "main";
-            guiManager.openGui(player, id);
-        }
-        return true;
-    });
+public class TrapSkinsConfig extends BaseConfig {
+    @Override
+    protected void loadValues() {
+        ConfigurationSection skins = config.getConfigurationSection("skins");
+        // Преобразуйте YAML в ваши объекты TrapSkin
+    }
 }
 ```
 
 ---
 
-## Доступные действия в GUI
+## Полезные ссылки
 
-* `close` — закрыть меню.
-* `command <cmd>` — выполнить команду от имени игрока.
-* `console <cmd>` — выполнить команду от имени консоли.
-* `message <msg>` — отправить сообщение игроку.
-* `opengui <id>` — открыть другое меню.
+* [Релизные заметки NextLib v1.0.5](docs/releases/NextLib-v1.0.5.md)
+* [Руководство по динамической базе данных](docs/dynamic-database.md)
+* [Руководство по GUI-условиям и действиям](docs/gui-conditions.md)
 
 ---
 
 ## Roadmap
 
-* [x] Command API
-* [x] Item API
-* [x] Color API
-* [x] Config Manager
-* [x] GUI API с конфигами
-* [ ] GUI Action Registry (кастомные действия)
-* [ ] SQL/Redis API
-* [ ] Event Utilities
+- [x] Command API
+- [x] Item API
+- [x] Color API
+- [x] Config Manager
+- [x] GUI API с условиями и слот-диапазонами
+- [x] Динамическая база данных с HikariCP
+- [ ] Расширяемый реестр действий GUI
+- [ ] Redis/Message Queue интеграции
+- [ ] Утилиты для работы с событиями
 
 ---
 
