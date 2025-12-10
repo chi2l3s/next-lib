@@ -1,11 +1,13 @@
-package io.github.chi2l3s.nextlib.api.quests;
+package io.github.chi2l3s.nextlib.api.quests.objectivies;
 
+import io.github.chi2l3s.nextlib.api.quests.QuestObjective;
+import io.github.chi2l3s.nextlib.api.quests.QuestObjectiveType;
 import lombok.Getter;
 import org.bukkit.Material;
 
 import java.util.Objects;
 
-public class CraftObjective implements QuestObjective {
+public final class CraftObjective implements QuestObjective {
     private final String id;
     private final String description;
     @Getter

@@ -5,6 +5,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
+/**
+ * Abstraction for persisting and loading quest progress.
+ */
 public interface QuestStore {
     void saveProgress(QuestProgress progress);
 

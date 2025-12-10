@@ -61,6 +61,69 @@ public class QuestProgress {
         return applyIncrement(objective -> objective.matchesCraft(material), amount);
     }
 
+    public boolean applyPlaytime(double minutes) {
+        if (minutes <= 0) {
+            return false;
+        }
+        return applyIncrement(QuestObjective::matchesPlaytime, minutes);
+    }
+
+    public boolean applyBlockBreak(Material blockType, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+        return applyIncrement(objective -> objective.matchesBlockBreak(blockType), amount);
+    }
+
+    public boolean applyBlockPlace(Material blockType, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+        return applyIncrement(objective -> objective.matchesBlockPlace(blockType), amount);
+    }
+
+    public boolean applySmelt(Material resultType, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+        return applyIncrement(objective -> objective.matchesSmelt(resultType), amount);
+    }
+
+    public boolean applyBreed(EntityType entityType, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+        return applyIncrement(objective -> objective.matchesBreed(entityType), amount);
+    }
+
+    public boolean applyTame(EntityType entityType, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+        return applyIncrement(objective -> objective.matchesTame(entityType), amount);
+    }
+
+    public boolean applyFish(Material caughtType, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+        return applyIncrement(objective -> objective.matchesFish(caughtType), amount);
+    }
+
+    public boolean applyConsume(Material material, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+        return applyIncrement(objective -> objective.matchesConsume(material), amount);
+    }
+
+    public boolean applyCustom(String eventType, double amount, Object payload) {
+        if (amount <= 0) {
+            return false;
+        }
+        return applyIncrement(objective -> objective.matchesCustom(eventType, payload), amount);
+    }
+
     private boolean applyIncrement(Predicate<QuestObjective> predicate, double amount) {
         boolean changed = false;
         for (QuestObjective objective: quest.getObjectives()) {

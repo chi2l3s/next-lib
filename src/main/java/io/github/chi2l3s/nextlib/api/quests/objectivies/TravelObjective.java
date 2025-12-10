@@ -1,10 +1,12 @@
-package io.github.chi2l3s.nextlib.api.quests;
+package io.github.chi2l3s.nextlib.api.quests.objectivies;
 
+import io.github.chi2l3s.nextlib.api.quests.QuestObjective;
+import io.github.chi2l3s.nextlib.api.quests.QuestObjectiveType;
 import lombok.Getter;
 
 import java.util.Objects;
 
-public class TravelObjective implements QuestObjective {
+public final class TravelObjective implements QuestObjective {
     private final String id;
     private final String description;
     @Getter

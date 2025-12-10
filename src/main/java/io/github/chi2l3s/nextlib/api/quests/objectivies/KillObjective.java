@@ -1,11 +1,13 @@
-package io.github.chi2l3s.nextlib.api.quests;
+package io.github.chi2l3s.nextlib.api.quests.objectivies;
 
+import io.github.chi2l3s.nextlib.api.quests.QuestObjective;
+import io.github.chi2l3s.nextlib.api.quests.QuestObjectiveType;
 import lombok.Getter;
 import org.bukkit.entity.EntityType;
 
 import java.util.Objects;
 
-public class KillObjective implements QuestObjective {
+public final class KillObjective implements QuestObjective {
     private final String id;
     private final String description;
     @Getter

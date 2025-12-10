@@ -77,6 +77,79 @@ public class QuestManager {
         applyUpdate(playerId, progress -> progress.applyCraft(material, amount));
     }
 
+    public void recordPlaytime(UUID playerId, double minutes) {
+        applyUpdate(playerId, progress -> progress.applyPlaytime(minutes));
+    }
+
+    public void recordBlockBreak(UUID playerId, Material blockType, int amount) {
+        applyUpdate(playerId, progress -> progress.applyBlockBreak(blockType, amount));
+    }
+
+    public void recordBlockBreak(UUID playerId, Material blockType) {
+        recordBlockBreak(playerId, blockType, 1);
+    }
+
+    public void recordBlockPlace(UUID playerId, Material blockType, int amount) {
+        applyUpdate(playerId, progress -> progress.applyBlockPlace(blockType, amount));
+    }
+
+    public void recordBlockPlace(UUID playerId, Material blockType) {
+        recordBlockPlace(playerId, blockType, 1);
+    }
+
+    public void recordSmelt(UUID playerId, Material resultType, int amount) {
+        applyUpdate(playerId, progress -> progress.applySmelt(resultType, amount));
+    }
+
+    public void recordSmelt(UUID playerId, Material resultType) {
+        recordSmelt(playerId, resultType, 1);
+    }
+
+    public void recordBreed(UUID playerId, EntityType entityType, int amount) {
+        applyUpdate(playerId, progress -> progress.applyBreed(entityType, amount));
+    }
+
+    public void recordBreed(UUID playerId, EntityType entityType) {
+        recordBreed(playerId, entityType, 1);
+    }
+
+    public void recordTame(UUID playerId, EntityType entityType, int amount) {
+        applyUpdate(playerId, progress -> progress.applyTame(entityType, amount));
+    }
+
+    public void recordTame(UUID playerId, EntityType entityType) {
+        recordTame(playerId, entityType, 1);
+    }
+
+    public void recordFish(UUID playerId, Material caughtType, int amount) {
+        applyUpdate(playerId, progress -> progress.applyFish(caughtType, amount));
+    }
+
+    public void recordFish(UUID playerId, Material caughtType) {
+        recordFish(playerId, caughtType, 1);
+    }
+
+    public void recordConsume(UUID playerId, Material material, int amount) {
+        applyUpdate(playerId, progress -> progress.applyConsume(material, amount));
+    }
+
+    public void recordConsume(UUID playerId, Material material) {
+        recordConsume(playerId, material, 1);
+    }
+
+    /**
+     * Применяет пользовательское событие ко всем активным квестам игрока. {@code eventType} может быть любым идентификатором,
+     * который использует ваш плагин (например "open-gift"), а {@code payload} - любой объект с контекстом события.
+     */
+    public void recordCustom(UUID playerId, String eventType, double amount, Object payload) {
+        Objects.requireNonNull(eventType, "eventType");
+        applyUpdate(playerId, progress -> progress.applyCustom(eventType, amount, payload));
+    }
+
+    public void recordCustom(UUID playerId, String eventType) {
+        recordCustom(playerId, eventType, 1.0, null);
+    }
+
     private void applyUpdate(UUID playerId, Function<QuestProgress, Boolean> updater) {
         Map<String, QuestProgress> progressMap = progressByPlayer.get(playerId);
         if (progressMap == null || progressMap.isEmpty()) {
