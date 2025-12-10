@@ -72,6 +72,20 @@ public class GuiManager {
         return guis.get(id.toLowerCase());
     }
 
+    public Gui registerGui(String id, Gui gui) {
+        String key = id.toLowerCase();
+        Gui previous = guis.put(key, gui);
+        if (previous != null) {
+            plugin.getLogger().warning("GUI " + key + " was overwritten by registerGui.");
+        }
+
+        return gui;
+    }
+
+    public Gui createGui(String id, String title, int size) {
+        return registerGui(id, new Gui(plugin, title, this, size));
+    }
+
     public void openGui(Player player, String id) {
         Gui gui = guis.get(id.toLowerCase());
         if (gui != null) {
@@ -93,10 +107,13 @@ public class GuiManager {
             plugin.getLogger().warning("Player '" + player.getName() + "' does not have an open GUI to refresh.");
             return;
         }
-        player.closeInventory();
-        Bukkit.getScheduler().runTask(plugin, () -> {
-           openGui(player, guiId);
-        });
+        Gui gui = guis.get(guiId);
+        if (gui == null) {
+            plugin.getLogger().warning("GUI '" + guiId + "' not found while trying to refresh for player '" + player.getName() + "'.");
+            return;
+        }
+
+        gui.refresh(player);
     }
 
     void handleClose(Player player) {

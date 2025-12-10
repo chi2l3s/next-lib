@@ -47,6 +47,14 @@ public class Gui implements Listener {
         }
     }
 
+    public void refresh(Player player) {
+        Inventory inventory = openInventories.get(player.getUniqueId());
+        if (inventory == null) return;
+
+        populate(inventory, player);
+        player.updateInventory();
+    }
+
     @EventHandler
     public void on(InventoryClickEvent e) {
         if (e.getClickedInventory() == null) return;

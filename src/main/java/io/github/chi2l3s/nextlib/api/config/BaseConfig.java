@@ -22,6 +22,12 @@ public abstract class BaseConfig {
         this.update = update;
     }
 
+    public BaseConfig(JavaPlugin plugin, String fileName) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), fileName);
+        this.update = true;
+    }
+
     public void reloadConfig() {
         if (!file.exists()) {
             plugin.saveResource(file.getName(), false);
