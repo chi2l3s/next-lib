@@ -70,7 +70,7 @@ public final class DynamicDatabase {
      * @param <T>        entity type
      * @param entityType the entity class to register (not null)
      * @return a DynamicTable for performing CRUD operations
-     * @throws EntityMappingException if the entity class cannot be introspected
+     * @throws io.github.chi2l3s.nextlib.api.database.EntityMappingException if the entity class cannot be introspected
      * @throws NullPointerException   if entityType is null
      */
     public <T> DynamicTable<T> register(Class<T> entityType) {
@@ -89,7 +89,7 @@ public final class DynamicDatabase {
      * @param tableName  custom table name (not null)
      * @param entityType the entity class to register (not null)
      * @return a DynamicTable for performing CRUD operations
-     * @throws EntityMappingException if the entity class cannot be introspected
+     * @throws io.github.chi2l3s.nextlib.api.database.EntityMappingException if the entity class cannot be introspected
      * @throws NullPointerException   if tableName or entityType is null
      */
     public <T> DynamicTable<T> register(String tableName, Class<T> entityType) {

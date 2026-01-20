@@ -1,7 +1,11 @@
 package io.github.chi2l3s.nextlib.api.item;
 
+import be.seeseemelk.mockbukkit.MockBukkit;
+import be.seeseemelk.mockbukkit.ServerMock;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +17,18 @@ import static org.assertj.core.api.Assertions.*;
  */
 @DisplayName("ItemBuilder Tests")
 class ItemBuilderTest {
+
+    private ServerMock server;
+
+    @BeforeEach
+    void setUp() {
+        server = MockBukkit.mock();
+    }
+
+    @AfterEach
+    void tearDown() {
+        MockBukkit.unmock();
+    }
 
     @Test
     @DisplayName("Should create ItemBuilder with material")
