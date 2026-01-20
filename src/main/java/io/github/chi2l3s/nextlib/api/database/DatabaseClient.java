@@ -19,7 +19,7 @@ public final class DatabaseClient {
         try {
             return connectionSupplier.get();
         } catch (SQLException exception) {
-            throw new DatabaseException("Failed to open database connection", exception);
+            throw new DatabaseConnectionException(exception);
         }
     }
 
@@ -45,7 +45,7 @@ public final class DatabaseClient {
                 return results;
             }
         } catch (SQLException exception) {
-            throw new DatabaseException("Failed to execute query: " + sql, exception);
+            throw new QueryExecutionException(sql, exception);
         }
     }
 
@@ -68,7 +68,7 @@ public final class DatabaseClient {
             }
             return statement.executeUpdate();
         } catch (SQLException exception) {
-            throw new DatabaseException("Failed to execute statement: " + sql, exception);
+            throw new QueryExecutionException(sql, exception);
         }
     }
 
@@ -84,7 +84,7 @@ public final class DatabaseClient {
             }
             return statement.executeBatch();
         } catch (SQLException exception) {
-            throw new DatabaseException("Failed to execute batch: " + sql, exception);
+            throw new QueryExecutionException(sql, "Failed to execute batch", exception);
         }
     }
 
