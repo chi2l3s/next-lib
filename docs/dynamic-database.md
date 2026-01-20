@@ -175,15 +175,67 @@ players.update()
 
 ## Продвинутые примеры
 
-### Множественные условия WHERE
+### Расширенные WHERE операторы (v1.0.7+)
 
 ```java
-// Все условия объединяются через AND
-List<PlayerEntity> result = players.findMany()
-    .where("trapSkinId", "lava_trap")
-    .where("coins", 1000)
+// Сравнения с операторами
+List<PlayerEntity> richPlayers = players.findMany()
+    .where("coins", QueryOperator.GREATER_THAN, 1000)
     .execute();
-// SQL: SELECT * FROM players WHERE trapSkinId = ? AND coins = ?
+
+List<PlayerEntity> lowLevel = players.findMany()
+    .where("level", QueryOperator.LESS_THAN_OR_EQUALS, 10)
+    .execute();
+
+// LIKE для поиска по шаблону
+List<PlayerEntity> searchResults = players.findMany()
+    .whereLike("nickname", "%chi%")
+    .execute();
+
+// IN для списка значений
+List<PlayerEntity> specificSkins = players.findMany()
+    .whereIn("trapSkinId", "ice_trap", "lava_trap", "poison_trap")
+    .execute();
+
+// BETWEEN для диапазона
+List<PlayerEntity> mediumPlayers = players.findMany()
+    .whereBetween("coins", 100, 1000)
+    .execute();
+
+// IS NULL и IS NOT NULL
+List<PlayerEntity> noSkin = players.findMany()
+    .whereIsNull("trapSkinId")
+    .execute();
+
+List<PlayerEntity> withSkin = players.findMany()
+    .whereIsNotNull("trapSkinId")
+    .execute();
+
+// Комбинации (все условия через AND)
+List<PlayerEntity> result = players.findMany()
+    .where("coins", QueryOperator.GREATER_THAN, 500)
+    .whereLike("nickname", "Pro%")
+    .whereIsNotNull("trapSkinId")
+    .execute();
+// SQL: SELECT * FROM players WHERE coins > ? AND nickname LIKE ? AND trapSkinId IS NOT NULL
+```
+
+### Доступные операторы
+
+```java
+QueryOperator.EQUALS              // =
+QueryOperator.NOT_EQUALS          // !=
+QueryOperator.GREATER_THAN        // >
+QueryOperator.GREATER_THAN_OR_EQUALS  // >=
+QueryOperator.LESS_THAN           // <
+QueryOperator.LESS_THAN_OR_EQUALS // <=
+QueryOperator.LIKE                // LIKE
+QueryOperator.NOT_LIKE            // NOT LIKE
+QueryOperator.IN                  // IN (list)
+QueryOperator.NOT_IN              // NOT IN (list)
+QueryOperator.BETWEEN             // BETWEEN x AND y
+QueryOperator.IS_NULL             // IS NULL
+QueryOperator.IS_NOT_NULL         // IS NOT NULL
 ```
 
 ### Работа с транзакциями
@@ -328,11 +380,11 @@ client.execute(
 
 ## Ограничения
 
-1. **Нет поддержки связей (relationships)** - ORM не поддерживает foreign keys и автоматические joins
-2. **Только базовые WHERE условия** - поддерживается только `=` и `IS NULL`
-3. **Нет автоматических миграций** - при изменении схемы нужно обновлять таблицы вручную
-4. **Нет ленивой загрузки** - все данные загружаются сразу
-5. **Только простые типы данных** - нет поддержки вложенных объектов
+1. **Ограниченная поддержка связей (relationships)** - поддержка JOIN и связей находится в базовой стадии
+2. **~~Только базовые WHERE условия~~** - ✅ **ИСПРАВЛЕНО в v1.0.7**: добавлены операторы `>`, `<`, `>=`, `<=`, `LIKE`, `IN`, `BETWEEN`
+3. **Ручные миграции** - при изменении схемы нужно обновлять таблицы вручную (система миграций в разработке)
+4. **Eager loading по умолчанию** - все данные загружаются сразу
+5. **Ограниченная поддержка вложенных объектов** - сложные вложенные структуры требуют ручной обработки
 
 ## Миграции схемы
 
