@@ -61,15 +61,7 @@ final class EmbeddedFieldHandler {
     }
 
     private static EntityField createFlattenedField(Field field, String columnName) {
-        // Use reflection to create EntityField with custom column name
-        try {
-            java.lang.reflect.Constructor<EntityField> constructor =
-                EntityField.class.getDeclaredConstructor(Field.class, String.class, boolean.class);
-            constructor.setAccessible(true);
-            return constructor.newInstance(field, columnName, false);
-        } catch (ReflectiveOperationException e) {
-            throw new DatabaseException("Failed to create flattened field", e);
-        }
+        return EntityField.forEmbedded(field, columnName);
     }
 
     private static List<Field> collectFields(Class<?> type) {

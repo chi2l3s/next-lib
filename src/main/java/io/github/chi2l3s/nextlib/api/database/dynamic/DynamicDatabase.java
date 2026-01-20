@@ -79,6 +79,48 @@ public final class DynamicDatabase {
     }
 
     /**
+     * Registers an entity class with V2 support for @Embedded and relationships.
+     * <p>
+     * This version supports:
+     * <ul>
+     *   <li>@Embedded annotation for nested objects</li>
+     *   <li>@OneToOne, @OneToMany, @ManyToOne relationships</li>
+     *   <li>Lazy and eager loading</li>
+     *   <li>Cascade operations</li>
+     * </ul>
+     * </p>
+     *
+     * @param <T>        entity type
+     * @param entityType the entity class to register (not null)
+     * @return a DynamicTableV2 for performing CRUD operations
+     * @throws io.github.chi2l3s.nextlib.api.database.EntityMappingException if the entity class cannot be introspected
+     * @throws NullPointerException   if entityType is null
+     * @since 1.0.8
+     */
+    public <T> DynamicTableV2<T> registerV2(Class<T> entityType) {
+        Objects.requireNonNull(entityType, "entityType");
+        return registerV2(defaultTableName(entityType), entityType);
+    }
+
+    /**
+     * Registers an entity class with V2 support and a custom table name.
+     *
+     * @param <T>        entity type
+     * @param tableName  custom table name (not null)
+     * @param entityType the entity class to register (not null)
+     * @return a DynamicTableV2 for performing CRUD operations
+     * @throws io.github.chi2l3s.nextlib.api.database.EntityMappingException if the entity class cannot be introspected
+     * @throws NullPointerException   if tableName or entityType is null
+     * @since 1.0.8
+     */
+    public <T> DynamicTableV2<T> registerV2(String tableName, Class<T> entityType) {
+        Objects.requireNonNull(tableName, "tableName");
+        Objects.requireNonNull(entityType, "entityType");
+        return (DynamicTableV2<T>) tables.computeIfAbsent(tableName, name ->
+                DynamicTableV2.create(client, name, entityType));
+    }
+
+    /**
      * Registers an entity class with a custom table name.
      * <p>
      * If the table doesn't exist, it will be created automatically.

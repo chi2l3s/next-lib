@@ -83,14 +83,15 @@ final class LazyLoadingHandler<T> implements InvocationHandler {
             return;
         }
 
-        // Use DynamicTable to load the entity
-        // This is simplified - in production you'd use the actual DynamicTable instance
-        String sql = "SELECT * FROM " + getTableName() + " WHERE " + joinColumn + " = ?";
+        // Use EntityMetadataV2 to load and map the entity
+        EntityMetadataV2<T> metadata = EntityMetadataV2.inspect(entityType);
+        String tableName = getTableName();
+        String columnList = metadata.columnList();
+
+        String sql = "SELECT " + columnList + " FROM " + tableName + " WHERE " + joinColumn + " = ?";
 
         List<T> results = client.query(sql, stmt -> stmt.setObject(1, foreignKey), rs -> {
-            // This would use EntityMetadata to map the result
-            // Simplified for now
-            throw new UnsupportedOperationException("Entity mapping not yet implemented in lazy loader");
+            return metadata.map(rs, client, false);
         });
 
         if (results.isEmpty()) {
@@ -160,13 +161,15 @@ final class LazyLoadingHandler<T> implements InvocationHandler {
                 return;
             }
 
-            // Load all entities matching the foreign key
+            // Use EntityMetadataV2 to load and map the collection
+            EntityMetadataV2<T> metadata = EntityMetadataV2.inspect(entityType);
             String tableName = entityType.getSimpleName().toLowerCase() + "s";
-            String sql = "SELECT * FROM " + tableName + " WHERE " + joinColumn + " = ?";
+            String columnList = metadata.columnList();
+
+            String sql = "SELECT " + columnList + " FROM " + tableName + " WHERE " + joinColumn + " = ?";
 
             realCollection = client.query(sql, stmt -> stmt.setObject(1, foreignKey), rs -> {
-                // This would use EntityMetadata to map the results
-                throw new UnsupportedOperationException("Entity mapping not yet implemented in lazy loader");
+                return metadata.map(rs, client, false);
             });
 
             if (realCollection == null) {

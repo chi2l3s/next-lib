@@ -18,7 +18,8 @@ final class EntityField {
     private final Class<?> type;
     private final boolean primaryKey;
 
-    private EntityField(Field field, String columnName, boolean primaryKey) {
+    // Package-private constructor for internal use
+    EntityField(Field field, String columnName, boolean primaryKey) {
         this.field = field;
         this.fieldName = field.getName();
         this.columnName = columnName;
@@ -30,6 +31,13 @@ final class EntityField {
         String column = field.getName();
         boolean primaryKey = field.isAnnotationPresent(PrimaryKey.class);
         return new EntityField(field, column, primaryKey);
+    }
+
+    /**
+     * Creates an EntityField with custom column name for embedded fields.
+     */
+    static EntityField forEmbedded(Field field, String columnName) {
+        return new EntityField(field, columnName, false);
     }
 
     String getFieldName() {
