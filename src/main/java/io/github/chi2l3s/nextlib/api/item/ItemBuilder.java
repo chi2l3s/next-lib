@@ -86,7 +86,7 @@ public class ItemBuilder {
     /**
      * Sets the display name of the item with color formatting.
      *
-     * @param name the display name (supports & color codes and HEX)
+     * @param name the display name (supports &amp; color codes and HEX)
      * @return this builder for chaining
      */
     public ItemBuilder setName(String name) {
@@ -99,7 +99,7 @@ public class ItemBuilder {
     /**
      * Sets the lore (description) of the item with color formatting.
      *
-     * @param lore the lore lines (supports & color codes and HEX)
+     * @param lore the lore lines (supports &amp; color codes and HEX)
      * @return this builder for chaining
      */
     public ItemBuilder setLore(String... lore) {
@@ -109,7 +109,7 @@ public class ItemBuilder {
     /**
      * Sets the lore (description) of the item with color formatting.
      *
-     * @param lore the lore lines (supports & color codes and HEX)
+     * @param lore the lore lines (supports &amp; color codes and HEX)
      * @return this builder for chaining
      */
     public ItemBuilder setLore(List<String> lore) {
