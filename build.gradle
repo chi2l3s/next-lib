@@ -46,6 +46,29 @@ publishing {
             artifactId = 'nextlib'
             version = version
             from components.java
+
+            pom {
+                name = 'NextLib'
+                description = 'A comprehensive library for Minecraft Paper/Spigot plugins'
+                url = 'https://github.com/chi2l3s/next-lib'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'chi2l3s'
+                        name = 'chi2l3s'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/chi2l3s/next-lib.git'
+                    developerConnection = 'scm:git:ssh://github.com/chi2l3s/next-lib.git'
+                    url = 'https://github.com/chi2l3s/next-lib'
+                }
+            }
         }
     }
     repositories {
@@ -68,6 +91,8 @@ java {
     if (JavaVersion.current() < javaVersion) {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 tasks.withType(JavaCompile).configureEach {

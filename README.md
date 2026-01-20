@@ -43,7 +43,7 @@
 
 ## Установка
 
-Добавьте JitPack-репозиторий и зависимость `1.0.5` в ваш build-скрипт.
+Добавьте JitPack-репозиторий и зависимость `1.0.7` в ваш build-скрипт.
 
 ### Gradle (Kotlin DSL)
 
@@ -54,7 +54,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.chi2l3s:next-lib:1.0.5")
+    implementation("com.github.chi2l3s:next-lib:1.0.7")
 }
 ```
 
@@ -67,7 +67,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.chi2l3s:next-lib:1.0.5'
+    implementation 'com.github.chi2l3s:next-lib:1.0.7'
 }
 ```
 
@@ -84,7 +84,7 @@ dependencies {
 <dependency>
     <groupId>com.github.chi2l3s</groupId>
     <artifactId>next-lib</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.7</version>
     <scope>provided</scope>
 </dependency>
 ```
