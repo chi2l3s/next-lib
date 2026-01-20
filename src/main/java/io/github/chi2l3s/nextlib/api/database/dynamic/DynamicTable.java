@@ -121,7 +121,8 @@ public final class DynamicTable<T> {
         return statement -> {
             int index = 1;
             for (Criterion criterion : criteria) {
-                criterion.bind(statement, index++);
+                criterion.bind(statement, index);
+                index += criterion.getBindCount();
             }
         };
     }
@@ -221,33 +222,128 @@ public final class DynamicTable<T> {
 
         @SuppressWarnings("unchecked")
         public Q where(String field, Object value) {
+            return where(field, QueryOperator.EQUALS, value);
+        }
+
+        @SuppressWarnings("unchecked")
+        public Q where(String field, QueryOperator operator, Object value) {
             EntityField entityField = metadata.requireField(field);
-            criteria.add(new Criterion(entityField, value));
+            criteria.add(new Criterion(entityField, operator, value));
+            return (Q) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Q whereLike(String field, String pattern) {
+            return where(field, QueryOperator.LIKE, pattern);
+        }
+
+        @SuppressWarnings("unchecked")
+        public Q whereIn(String field, Object... values) {
+            EntityField entityField = metadata.requireField(field);
+            criteria.add(new Criterion(entityField, QueryOperator.IN, values));
+            return (Q) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Q whereBetween(String field, Object min, Object max) {
+            EntityField entityField = metadata.requireField(field);
+            criteria.add(new Criterion(entityField, QueryOperator.BETWEEN, new Object[]{min, max}));
+            return (Q) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Q whereIsNull(String field) {
+            EntityField entityField = metadata.requireField(field);
+            criteria.add(new Criterion(entityField, QueryOperator.IS_NULL, null));
+            return (Q) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Q whereIsNotNull(String field) {
+            EntityField entityField = metadata.requireField(field);
+            criteria.add(new Criterion(entityField, QueryOperator.IS_NOT_NULL, null));
             return (Q) this;
         }
     }
 
     private static final class Criterion {
         private final EntityField field;
+        private final QueryOperator operator;
         private final Object value;
 
         private Criterion(EntityField field, Object value) {
+            this(field, QueryOperator.EQUALS, value);
+        }
+
+        private Criterion(EntityField field, QueryOperator operator, Object value) {
             this.field = field;
+            this.operator = operator;
             this.value = value;
         }
 
         private void appendCondition(StringBuilder builder, List<Criterion> parameters) {
             builder.append(field.getColumnName());
-            if (value == null) {
-                builder.append(" IS NULL");
-            } else {
-                builder.append(" = ?");
-                parameters.add(this);
+
+            switch (operator) {
+                case IS_NULL:
+                case IS_NOT_NULL:
+                    builder.append(' ').append(operator.getSql());
+                    break;
+
+                case IN:
+                case NOT_IN:
+                    builder.append(' ').append(operator.getSql()).append(" (");
+                    Object[] values = (Object[]) value;
+                    for (int i = 0; i < values.length; i++) {
+                        builder.append('?');
+                        if (i < values.length - 1) {
+                            builder.append(", ");
+                        }
+                    }
+                    builder.append(')');
+                    parameters.add(this);
+                    break;
+
+                case BETWEEN:
+                    builder.append(' ').append(operator.getSql()).append(" ? AND ?");
+                    parameters.add(this);
+                    break;
+
+                default:
+                    if (value == null) {
+                        builder.append(" IS NULL");
+                    } else {
+                        builder.append(' ').append(operator.getSql()).append(" ?");
+                        parameters.add(this);
+                    }
+                    break;
             }
         }
 
         private void bind(PreparedStatement statement, int index) throws SQLException {
-            field.bind(statement, index, value);
+            if (operator == QueryOperator.IN || operator == QueryOperator.NOT_IN) {
+                Object[] values = (Object[]) value;
+                for (int i = 0; i < values.length; i++) {
+                    field.bind(statement, index + i, values[i]);
+                }
+            } else if (operator == QueryOperator.BETWEEN) {
+                Object[] values = (Object[]) value;
+                field.bind(statement, index, values[0]);
+                field.bind(statement, index + 1, values[1]);
+            } else {
+                field.bind(statement, index, value);
+            }
+        }
+
+        private int getBindCount() {
+            if (operator == QueryOperator.IN || operator == QueryOperator.NOT_IN) {
+                return ((Object[]) value).length;
+            } else if (operator == QueryOperator.BETWEEN) {
+                return 2;
+            } else if (operator == QueryOperator.IS_NULL || operator == QueryOperator.IS_NOT_NULL) {
+                return 0;
+            }
+            return value == null ? 0 : 1;
         }
     }
 }

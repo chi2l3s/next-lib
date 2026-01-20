@@ -45,7 +45,8 @@ final class EntityMetadata<T> {
     static <T> EntityMetadata<T> inspect(Class<T> type) {
         List<Field> declaredFields = collectInstanceFields(type);
         if (declaredFields.isEmpty()) {
-            throw new DatabaseException("Entity " + type.getName() + " does not declare any fields");
+            throw new io.github.chi2l3s.nextlib.api.database.EntityMappingException(
+                    type, "Entity does not declare any fields");
         }
         Constructor<T> constructor = resolveConstructor(type, declaredFields);
         List<EntityField> entityFields = new ArrayList<>();
@@ -76,7 +77,8 @@ final class EntityMetadata<T> {
             }
             return constructor;
         } catch (ReflectiveOperationException exception) {
-            throw new DatabaseException("Failed to resolve constructor for entity " + type.getName(), exception);
+            throw new io.github.chi2l3s.nextlib.api.database.EntityMappingException(
+                    type, "Failed to resolve constructor", exception);
         }
     }
 
@@ -135,7 +137,8 @@ final class EntityMetadata<T> {
             }
             return constructor.newInstance(values);
         } catch (ReflectiveOperationException | SQLException exception) {
-            throw new DatabaseException("Failed to map result set for entity " + entityType.getName(), exception);
+            throw new io.github.chi2l3s.nextlib.api.database.EntityMappingException(
+                    entityType, "Failed to map result set", exception);
         }
     }
 }

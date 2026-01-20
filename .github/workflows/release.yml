@@ -1,0 +1,92 @@
+name: Create Release and Publish to JitPack
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.7)'
+        required: true
+        type: string
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build --no-daemon
+
+      - name: Run tests
+        run: ./gradlew test --no-daemon
+
+      - name: Build JAR
+        run: ./gradlew jar --no-daemon
+
+      - name: Get version from build.gradle
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            VERSION=$(echo ${GITHUB_REF#refs/tags/v})
+            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Find JAR file
+        id: find_jar
+        run: |
+          JAR_FILE=$(find build/libs -name "*.jar" ! -name "*-plain.jar" | head -n 1)
+          echo "JAR_FILE=$JAR_FILE" >> $GITHUB_OUTPUT
+          echo "JAR_NAME=$(basename $JAR_FILE)" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          name: NextLib v${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ${{ steps.find_jar.outputs.JAR_FILE }}
+
+      - name: Trigger JitPack build
+        run: |
+          curl -X POST "https://jitpack.io/api/builds/io.github.chi2l3s/next-lib/${{ steps.get_version.outputs.VERSION }}"
+
+      - name: Comment on success
+        run: |
+          echo "✅ Release v${{ steps.get_version.outputs.VERSION }} created successfully!"
+          echo "📦 JAR file: ${{ steps.find_jar.outputs.JAR_NAME }}"
+          echo "🚀 JitPack build triggered"
+          echo ""
+          echo "To use this release in your project, add to build.gradle:"
+          echo "repositories {"
+          echo "    maven { url 'https://jitpack.io' }"
+          echo "}"
+          echo "dependencies {"
+          echo "    implementation 'io.github.chi2l3s:next-lib:${{ steps.get_version.outputs.VERSION }}'"
+          echo "}"

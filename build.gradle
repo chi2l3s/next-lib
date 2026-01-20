@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'io.github.chi2l3s'
-version = '1.0.6.1'
+version = '1.0.7'
 
 repositories {
     mavenCentral()
@@ -25,6 +25,18 @@ dependencies {
     implementation 'org.yaml:snakeyaml:2.2'
     implementation 'com.squareup:javapoet:1.13.0'
     implementation 'com.zaxxer:HikariCP:7.0.2'
+
+    // Testing dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.1'
+    testImplementation 'org.mockito:mockito-core:5.8.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.8.0'
+    testImplementation 'org.assertj:assertj-core:3.25.1'
+    testImplementation 'com.h2database:h2:2.2.224'
+    testImplementation "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
+    testCompileOnly "org.projectlombok:lombok:1.18.34"
+    testAnnotationProcessor "org.projectlombok:lombok:1.18.34"
 }
 
 publishing {
@@ -72,5 +84,13 @@ processResources {
     filteringCharset 'UTF-8'
     filesMatching('plugin.yml') {
         expand props
+    }
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
     }
 }
