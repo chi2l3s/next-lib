@@ -17,22 +17,22 @@ public enum QueryOperator {
     NOT_EQUALS("!="),
 
     /**
-     * Greater than (>)
+     * Greater than (&gt;)
      */
     GREATER_THAN(">"),
 
     /**
-     * Greater than or equals (>=)
+     * Greater than or equals (&gt;=)
      */
     GREATER_THAN_OR_EQUALS(">="),
 
     /**
-     * Less than (<)
+     * Less than (&lt;)
      */
     LESS_THAN("<"),
 
     /**
-     * Less than or equals (<=)
+     * Less than or equals (&lt;=)
      */
     LESS_THAN_OR_EQUALS("<="),
 
